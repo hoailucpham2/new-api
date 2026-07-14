@@ -229,6 +229,16 @@ func SetApiRouter(router *gin.Engine) {
 		}
 		registerChannelRoutes(apiRouter)
 		registerAuthzRoutes(apiRouter)
+		memberRoute := apiRouter.Group("/member")
+		memberRoute.Use(middleware.UserAuth())
+		{
+			memberRoute.POST("/channel", controller.CreateSelfChannel)
+			memberRoute.GET("/channel", controller.ListSelfChannels)
+			memberRoute.PUT("/channel/:id", controller.UpdateSelfChannel)
+			memberRoute.DELETE("/channel/:id", controller.DeleteSelfChannel)
+			memberRoute.GET("/donatable", controller.ListDonatableChannels)
+			memberRoute.POST("/donate", controller.DonateKey)
+		}
 		tokenRoute := apiRouter.Group("/token")
 		tokenRoute.Use(middleware.UserAuth())
 		{
