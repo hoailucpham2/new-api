@@ -29,6 +29,7 @@ import {
   Radio,
   ServerCog,
   Settings,
+  Share2,
   Ticket,
   User,
   UserPlus,
@@ -108,6 +109,11 @@ export function useSidebarData(): SidebarData {
             title: t('Wallet'),
             url: '/wallet',
             icon: Wallet,
+          },
+          {
+            title: t('My Contribution Channels'),
+            url: '/member-channels',
+            icon: Share2,
           },
           {
             title: t('Profile'),

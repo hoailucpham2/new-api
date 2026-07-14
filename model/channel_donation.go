@@ -34,17 +34,23 @@ func CreateChannelKeyDonation(channelId, userId, keyCount, points int) error {
 }
 
 // DonationPointsByUser 汇总每个用户累计捐赠点数（user_id -> points）。
-func DonationPointsByUser() (map[int]int, error) {
+// startTime/endTime<=0 表示不限时间。
+func DonationPointsByUser(startTime, endTime int64) (map[int]int, error) {
 	type row struct {
 		UserId int
 		Points int
 	}
 	var rows []row
-	err := DB.Model(&ChannelKeyDonation{}).
+	q := DB.Model(&ChannelKeyDonation{}).
 		Select("user_id, sum(points) as points").
-		Group("user_id").
-		Scan(&rows).Error
-	if err != nil {
+		Group("user_id")
+	if startTime > 0 {
+		q = q.Where("created_at >= ?", startTime)
+	}
+	if endTime > 0 {
+		q = q.Where("created_at <= ?", endTime)
+	}
+	if err := q.Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 	result := make(map[int]int, len(rows))

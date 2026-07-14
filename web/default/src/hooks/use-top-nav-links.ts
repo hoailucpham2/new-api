@@ -86,6 +86,17 @@ export function useTopNavLinks(): TopNavLink[] {
     links.push({ title: t('Rankings'), href: '/rankings', requiresAuth })
   }
 
+  // Contributions
+  const contributions = modules?.contributions
+  if (contributions && typeof contributions === 'object' && contributions.enabled) {
+    const requiresAuth = contributions.requireAuth && !isAuthed
+    links.push({
+      title: t('Contributions'),
+      href: '/contributions',
+      requiresAuth,
+    })
+  }
+
   // Docs (supports external links)
   if (modules?.docs !== false) {
     if (docsLink) {
