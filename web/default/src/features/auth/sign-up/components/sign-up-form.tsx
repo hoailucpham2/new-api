@@ -50,6 +50,7 @@ import {
   saveAffiliateCode,
 } from '@/features/auth/lib/storage'
 import { useStatus } from '@/hooks/use-status'
+import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
 export function SignUpForm({
@@ -58,6 +59,12 @@ export function SignUpForm({
 }: React.HTMLAttributes<HTMLFormElement>) {
   const { t } = useTranslation()
   const [isLoading, setIsLoading] = useState(false)
+  // 邀请注册：链接形如 /register?invite=<token>，校验与建号走同域 /invite 服务
+  const [inviteToken] = useState(
+    () =>
+      new URLSearchParams(window.location.search).get('invite')?.trim() || ''
+  )
+  const [inviteError, setInviteError] = useState('')
   const [verificationCode, setVerificationCode] = useState('')
   const [agreedToLegal, setAgreedToLegal] = useState(false)
   const [wechatCode, setWeChatCode] = useState('')
@@ -135,9 +142,52 @@ export function SignUpForm({
     }
   }, [])
 
+  useEffect(() => {
+    if (!inviteToken) return
+    api
+      .get<{ success: boolean; message?: string }>(
+        `/invite/api/check?token=${encodeURIComponent(inviteToken)}`
+      )
+      .then((res) => {
+        if (!res.data?.success) {
+          setInviteError(res.data?.message || t('Invite link is invalid'))
+        }
+      })
+      .catch(() => {
+        /* 校验失败不阻塞，提交时仍会二次校验 */
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inviteToken])
+
   async function onSubmit(data: z.infer<typeof registerFormSchema>) {
     if (requiresLegalConsent && !agreedToLegal) {
       toast.error(legalConsentErrorMessage)
+      return
+    }
+
+    // 邀请注册分支：绕过站点注册开关，由邀请门校验令牌并建号
+    if (inviteToken) {
+      setIsLoading(true)
+      try {
+        const res = await api.post<{ success: boolean; message?: string }>(
+          '/invite/api/register',
+          {
+            token: inviteToken,
+            username: data.username,
+            password: data.password,
+          }
+        )
+        if (res.data?.success) {
+          toast.success(t('Account created! Please sign in'))
+          redirectToLogin()
+        } else {
+          toast.error(res.data?.message || t('Failed to create account'))
+        }
+      } catch (_error) {
+        toast.error(t('Failed to create account'))
+      } finally {
+        setIsLoading(false)
+      }
       return
     }
 
@@ -230,6 +280,20 @@ export function SignUpForm({
         className={cn('grid gap-4', className)}
         {...props}
       >
+        {/* Invite registration banner */}
+        {inviteToken && (
+          <div
+            className={cn(
+              'rounded-md border px-3 py-2 text-sm',
+              inviteError
+                ? 'border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-400'
+                : 'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300'
+            )}
+          >
+            {inviteError || t('You are registering with an invite link')}
+          </div>
+        )}
+
         {/* Username Field */}
         <FormField
           control={form.control}
@@ -278,8 +342,8 @@ export function SignUpForm({
           )}
         />
 
-        {/* Email Verification Section */}
-        {emailVerificationRequired && (
+        {/* Email Verification Section (not needed for invite registration) */}
+        {emailVerificationRequired && !inviteToken && (
           <>
             {/* Email Field */}
             <FormField
@@ -358,6 +422,7 @@ export function SignUpForm({
           className='mt-2 w-full justify-center gap-2'
           disabled={
             isLoading ||
+            Boolean(inviteError) ||
             (requiresLegalConsent && !agreedToLegal) ||
             !turnstileReady
           }
@@ -366,7 +431,7 @@ export function SignUpForm({
           {t('Create account')}
         </Button>
 
-        {oauthRegisterEnabled && (
+        {oauthRegisterEnabled && !inviteToken && (
           <OAuthProviders
             status={status}
             disabled={isLoading || (requiresLegalConsent && !agreedToLegal)}
