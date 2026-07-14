@@ -1,16 +1,7 @@
 {
   "translation": {
-    "My Contribution Channels": "我的贡献渠道",
-    "Create a channel": "新建渠道",
-    "Channel name": "渠道名称",
-    "Channel type (1=OpenAI, 8=Custom)": "渠道类型（1=OpenAI，8=自定义）",
     "Base URL (optional)": "Base URL（可选）",
-    "Model prefix (e.g. your name)": "模型前缀（如你的名字）",
     "Models, comma-separated (e.g. gpt-4o-mini)": "模型，逗号分隔（如 gpt-4o-mini）",
-    "Your models get your prefix automatically so they stay independent from admin channels. Anyone using a prefixed model trusts you with their requests.": "你的模型会自动加上你的前缀，从而与管理员渠道相互独立。使用带前缀模型的人即表示信任你处理其请求。",
-    "Donate a key to a shared channel": "向共享渠道捐赠 Key",
-    "Select a channel": "选择渠道",
-    "API key to donate": "要捐赠的 API 密钥",
     "Donate": "捐赠",
     "No channels yet": "还没有渠道",
     "Delete this channel?": "删除该渠道？",
@@ -2051,7 +2042,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "相关项目",
     "footer.defaultCopyright": "版权所有。",
-    "footer.new\u0061pi.projectAttributionSuffix": "版权所有，由项目贡献者设计与开发。",
+    "footer.newapi.projectAttributionSuffix": "版权所有，由项目贡献者设计与开发。",
     "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment": "对于 2025 年 5 月 10 日之后添加的渠道，在部署时无需从模型名称中移除 \".\"",
     "For private deployments, format: https://fastgpt.run/api/openapi": "对于私有部署，格式为：https://fastgpt.run/api/openapi",
     "Force a syntactically valid JSON response": "强制返回语法合法的 JSON",
@@ -5227,6 +5218,16 @@
     "Zero retention": "零数据保留",
     "Zhipu": "智谱",
     "Zhipu V4": "智谱 V4",
-    "Zoom": "缩放"
+    "Zoom": "缩放",
+    "Shared Channel Pool": "共享渠道池",
+    "Channels here are co-managed by all members: keys are pooled and models are automatically prefixed with the channel name.": "这里的渠道由全体成员共同维护：key 汇入共享池，模型自动加上渠道名前缀。",
+    "Keys": "Key 数",
+    "Donate Key": "捐 Key",
+    "Channel updated": "渠道已更新",
+    "Models are automatically prefixed with the channel name, e.g. [name]gpt-4o.": "模型会自动加上渠道名前缀，如 [渠道名]gpt-4o。",
+    "Channel name (also the model prefix)": "渠道名（同时作为模型前缀）",
+    "Keys, one per line": "Key，一行一个",
+    "Other parameters (optional, e.g. region)": "其他参数（可选，如区域）",
+    "Donated keys join this channel’s shared key pool.": "捐出的 key 将进入该渠道的共享 key 池。"
   }
 }

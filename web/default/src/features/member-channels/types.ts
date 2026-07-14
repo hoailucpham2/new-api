@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-export interface MemberChannel {
+export interface PoolChannel {
   id: number
   name: string
   type: number
@@ -24,22 +24,22 @@ export interface MemberChannel {
   group: string
   status: number
   owner_id: number
+  base_url?: string | null
+  other?: string
+  model_mapping?: string | null
+  channel_info?: {
+    is_multi_key: boolean
+    multi_key_size: number
+  }
 }
 
-export interface DonatableChannel {
-  id: number
-  name: string
-  type: number
-  models: string
-}
-
-export interface CreateChannelBody {
+export interface ChannelFormBody {
   name: string
   type: number
   base_url: string
-  key: string
+  key?: string
   models: string
-  prefix: string
+  other?: string
 }
 
 export interface DonateBody {
@@ -47,16 +47,10 @@ export interface DonateBody {
   key: string
 }
 
-export interface MemberChannelListResponse {
+export interface PoolChannelListResponse {
   success: boolean
   message?: string
-  data: MemberChannel[]
-}
-
-export interface DonatableListResponse {
-  success: boolean
-  message?: string
-  data: DonatableChannel[]
+  data: PoolChannel[]
 }
 
 export interface MemberActionResponse {

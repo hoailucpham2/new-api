@@ -19,30 +19,32 @@ For commercial licensing, please contact support@quantumnous.com
 import { api } from '@/lib/api'
 
 import type {
-  CreateChannelBody,
-  DonatableListResponse,
+  ChannelFormBody,
   DonateBody,
   MemberActionResponse,
-  MemberChannelListResponse,
+  PoolChannelListResponse,
 } from './types'
 
-export async function listMyChannels() {
-  const res = await api.get<MemberChannelListResponse>('/api/member/channel')
+export async function listPoolChannels() {
+  const res = await api.get<PoolChannelListResponse>('/api/member/channel')
   return res.data
 }
 
-export async function createMyChannel(body: CreateChannelBody) {
+export async function createPoolChannel(body: ChannelFormBody) {
   const res = await api.post<MemberActionResponse>('/api/member/channel', body)
   return res.data
 }
 
-export async function deleteMyChannel(id: number) {
-  const res = await api.delete<MemberActionResponse>(`/api/member/channel/${id}`)
+export async function updatePoolChannel(id: number, body: ChannelFormBody) {
+  const res = await api.put<MemberActionResponse>(
+    `/api/member/channel/${id}`,
+    body
+  )
   return res.data
 }
 
-export async function listDonatableChannels() {
-  const res = await api.get<DonatableListResponse>('/api/member/donatable')
+export async function deletePoolChannel(id: number) {
+  const res = await api.delete<MemberActionResponse>(`/api/member/channel/${id}`)
   return res.data
 }
 

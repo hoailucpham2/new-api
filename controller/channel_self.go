@@ -16,8 +16,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// 成员贡献渠道：普通用户可新建自己的独立渠道（模型名强制带前缀，不与管理员渠道并池），
-// 或向公共池渠道捐 key。全部走 UserAuth + 归属校验，绝不复用管理员的 AddChannel/UpdateChannel。
+// 成员共享渠道池：所有纯 人类 组的渠道由全体成员共同管理（建/改/删/捐 key），
+// 模型名强制带 [渠道名] 前缀，不与管理员渠道并池。带其他身份组的渠道是管理员私有标记，
+// 不进共享池。全部走 UserAuth，绝不复用管理员的 AddChannel/UpdateChannel。
 
 // validateMemberBaseURL 对成员提供的 base_url 做 SSRF 兜底：拒绝内网/环回/链路本地/
 // 元数据(169.254.169.254)/未指定地址。只对成员端点生效，管理员不受限。
@@ -55,13 +56,19 @@ func validateMemberBaseURL(raw string) error {
 	return nil
 }
 
-// applyMemberPrefix 把前缀拼到每个基础模型名上，返回带前缀的 models 串、
+// applyChannelNamePrefix 把渠道名作为前缀拼到每个基础模型名上，返回带前缀的 models 串、
 // ModelMapping(JSON) 以及 前缀名->真名 映射。前缀保证成员渠道不与管理员同名模型并池，
 // ModelMapping 在发往上游前把前缀剥掉还原真名。
-func applyMemberPrefix(prefix string, baseModels []string) (string, string, map[string]string, error) {
-	prefix = strings.TrimSpace(strings.ReplaceAll(prefix, ",", ""))
+func applyChannelNamePrefix(name string, baseModels []string) (string, string, map[string]string, error) {
+	prefix := strings.TrimSpace(name)
 	if prefix == "" {
-		return "", "", nil, fmt.Errorf("前缀不能为空")
+		return "", "", nil, fmt.Errorf("渠道名不能为空")
+	}
+	if strings.ContainsAny(prefix, ",\n[]") {
+		return "", "", nil, fmt.Errorf("渠道名将作为模型前缀，不能包含逗号或方括号")
+	}
+	if len(prefix) > 64 {
+		return "", "", nil, fmt.Errorf("渠道名过长（最多 64 字符）")
 	}
 	prefixedToBase := make(map[string]string)
 	mapping := make(map[string]string)
@@ -137,17 +144,16 @@ func inheritMemberPricing(prefixedToBase map[string]string) {
 }
 
 type SelfChannelRequest struct {
-	Name     string `json:"name"`
+	Name     string `json:"name"` // 渠道名，同时作为模型前缀
 	Type     int    `json:"type"`
 	BaseURL  string `json:"base_url"`
 	Key      string `json:"key"`
-	Models   string `json:"models"` // 逗号分隔的基础模型名（不含前缀）
-	Prefix   string `json:"prefix"`
+	Models   string `json:"models"`   // 逗号分隔的基础模型名（不含前缀）
 	Other    string `json:"other"`    // Vertex 区域等
 	Settings string `json:"settings"` // OtherSettings，可选
 }
 
-// CreateSelfChannel 成员新建自己的独立渠道。
+// CreateSelfChannel 成员新建共享池渠道，模型名自动加 [渠道名] 前缀。
 func CreateSelfChannel(c *gin.Context) {
 	userId := c.GetInt("id")
 	req := SelfChannelRequest{}
@@ -164,16 +170,22 @@ func CreateSelfChannel(c *gin.Context) {
 		return
 	}
 	baseModels := strings.Split(req.Models, ",")
-	modelsStr, mappingJSON, prefixedToBase, err := applyMemberPrefix(req.Prefix, baseModels)
+	modelsStr, mappingJSON, prefixedToBase, err := applyChannelNamePrefix(req.Name, baseModels)
 	if err != nil {
 		common.ApiErrorMsg(c, err.Error())
 		return
 	}
 
+	keys := make([]string, 0)
+	for _, k := range strings.Split(req.Key, "\n") {
+		if k = strings.TrimSpace(k); k != "" {
+			keys = append(keys, k)
+		}
+	}
 	channel := &model.Channel{
 		Name:         strings.TrimSpace(req.Name),
 		Type:         req.Type,
-		Key:          strings.TrimSpace(req.Key),
+		Key:          strings.Join(keys, "\n"),
 		Models:       modelsStr,
 		ModelMapping: &mappingJSON,
 		Group:        model.MemberChannelGroup,
@@ -181,6 +193,11 @@ func CreateSelfChannel(c *gin.Context) {
 		OwnerID:      userId,
 		Other:        strings.TrimSpace(req.Other),
 		CreatedTime:  common.GetTimestamp(),
+	}
+	if len(keys) > 1 {
+		channel.ChannelInfo.IsMultiKey = true
+		channel.ChannelInfo.MultiKeyMode = constant.MultiKeyModeRandom
+		channel.ChannelInfo.MultiKeySize = len(keys)
 	}
 	if strings.TrimSpace(req.BaseURL) != "" {
 		base := strings.TrimSpace(req.BaseURL)
@@ -208,10 +225,9 @@ func CreateSelfChannel(c *gin.Context) {
 	})
 }
 
-// ListSelfChannels 列出当前成员拥有的渠道（不含 key）。
+// ListSelfChannels 列出共享池全部渠道（纯 人类 组，不含 key），全体成员可见可管理。
 func ListSelfChannels(c *gin.Context) {
-	userId := c.GetInt("id")
-	channels, err := model.GetChannelsByOwner(userId)
+	channels, err := model.GetDonatableChannels()
 	if err != nil {
 		common.ApiError(c, err)
 		return
@@ -226,25 +242,45 @@ func ListSelfChannels(c *gin.Context) {
 	})
 }
 
-// UpdateSelfChannel 成员编辑自己的渠道。仅能改自己拥有的渠道；OwnerID/Group/Status 强制保持。
+// getPoolChannel 载入共享池渠道；非纯 人类 组（管理员私有）一律拒绝。
+func getPoolChannel(c *gin.Context) (*model.Channel, bool) {
+	channelId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ApiErrorMsg(c, "无效的渠道 id")
+		return nil, false
+	}
+	channel, err := model.GetChannelById(channelId, true)
+	if err != nil {
+		common.ApiErrorMsg(c, "渠道不存在")
+		return nil, false
+	}
+	if !model.IsDonatableChannel(channel) {
+		common.ApiErrorMsg(c, "该渠道不在共享池，成员不可管理")
+		return nil, false
+	}
+	return channel, true
+}
+
+// UpdateSelfChannel 成员编辑共享池渠道（共同管理）。渠道名即模型前缀，改名会同步
+// 重算前缀模型与映射。不改 key（key 只能通过捐赠进入）、不改归属与状态。
 func UpdateSelfChannel(c *gin.Context) {
-	userId := c.GetInt("id")
 	req := SelfChannelRequest{}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ApiError(c, err)
 		return
 	}
-	channelId, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		common.ApiErrorMsg(c, "无效的渠道 id")
-		return
-	}
-	channel, err := model.GetOwnedChannelById(channelId, userId)
-	if err != nil {
-		common.ApiErrorMsg(c, "渠道不存在或不属于你")
+	channel, ok := getPoolChannel(c)
+	if !ok {
 		return
 	}
 	if err := validateMemberBaseURL(req.BaseURL); err != nil {
+		common.ApiErrorMsg(c, err.Error())
+		return
+	}
+
+	baseModels := strings.Split(req.Models, ",")
+	modelsStr, mappingJSON, prefixedToBase, err := applyChannelNamePrefix(req.Name, baseModels)
+	if err != nil {
 		common.ApiErrorMsg(c, err.Error())
 		return
 	}
@@ -261,25 +297,9 @@ func UpdateSelfChannel(c *gin.Context) {
 	} else {
 		channel.BaseURL = nil
 	}
-	if strings.TrimSpace(req.Key) != "" {
-		channel.Key = strings.TrimSpace(req.Key)
-	}
-
-	var prefixedToBase map[string]string
-	baseModels := strings.Split(req.Models, ",")
-	modelsStr, mappingJSON, ptb, err := applyMemberPrefix(req.Prefix, baseModels)
-	if err != nil {
-		common.ApiErrorMsg(c, err.Error())
-		return
-	}
 	channel.Models = modelsStr
 	channel.ModelMapping = &mappingJSON
-	prefixedToBase = ptb
-
-	// 强制保持归属与身份组
-	channel.OwnerID = userId
 	channel.Group = model.MemberChannelGroup
-	channel.Status = common.ChannelStatusEnabled
 
 	if err := validateChannel(channel, false); err != nil {
 		common.ApiErrorMsg(c, err.Error())
@@ -295,17 +315,10 @@ func UpdateSelfChannel(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": ""})
 }
 
-// DeleteSelfChannel 成员删除自己的渠道。
+// DeleteSelfChannel 成员删除共享池渠道（共同管理）。
 func DeleteSelfChannel(c *gin.Context) {
-	userId := c.GetInt("id")
-	channelId, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		common.ApiErrorMsg(c, "无效的渠道 id")
-		return
-	}
-	channel, err := model.GetOwnedChannelById(channelId, userId)
-	if err != nil {
-		common.ApiErrorMsg(c, "渠道不存在或不属于你")
+	channel, ok := getPoolChannel(c)
+	if !ok {
 		return
 	}
 	if err := channel.Delete(); err != nil {

@@ -1,16 +1,7 @@
 {
   "translation": {
-    "My Contribution Channels": "My Contribution Channels",
-    "Create a channel": "Create a channel",
-    "Channel name": "Channel name",
-    "Channel type (1=OpenAI, 8=Custom)": "Channel type (1=OpenAI, 8=Custom)",
     "Base URL (optional)": "Base URL (optional)",
-    "Model prefix (e.g. your name)": "Model prefix (e.g. your name)",
     "Models, comma-separated (e.g. gpt-4o-mini)": "Models, comma-separated (e.g. gpt-4o-mini)",
-    "Your models get your prefix automatically so they stay independent from admin channels. Anyone using a prefixed model trusts you with their requests.": "Your models get your prefix automatically so they stay independent from admin channels. Anyone using a prefixed model trusts you with their requests.",
-    "Donate a key to a shared channel": "Donate a key to a shared channel",
-    "Select a channel": "Select a channel",
-    "API key to donate": "API key to donate",
     "Donate": "Donate",
     "No channels yet": "No channels yet",
     "Delete this channel?": "Delete this channel?",
@@ -2051,7 +2042,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "Related Projects",
     "footer.defaultCopyright": "All rights reserved.",
-    "footer.new\u0061pi.projectAttributionSuffix": "All rights reserved. Designed and developed by the project contributors.",
+    "footer.newapi.projectAttributionSuffix": "All rights reserved. Designed and developed by the project contributors.",
     "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment": "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment",
     "For private deployments, format: https://fastgpt.run/api/openapi": "For private deployments, format: https://fastgpt.run/api/openapi",
     "Force a syntactically valid JSON response": "Force a syntactically valid JSON response",
@@ -5204,6 +5195,16 @@
     "Zero retention": "Zero retention",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V4",
-    "Zoom": "Zoom"
+    "Zoom": "Zoom",
+    "Shared Channel Pool": "Shared Channel Pool",
+    "Channels here are co-managed by all members: keys are pooled and models are automatically prefixed with the channel name.": "Channels here are co-managed by all members: keys are pooled and models are automatically prefixed with the channel name.",
+    "Keys": "Keys",
+    "Donate Key": "Donate Key",
+    "Channel updated": "Channel updated",
+    "Models are automatically prefixed with the channel name, e.g. [name]gpt-4o.": "Models are automatically prefixed with the channel name, e.g. [name]gpt-4o.",
+    "Channel name (also the model prefix)": "Channel name (also the model prefix)",
+    "Keys, one per line": "Keys, one per line",
+    "Other parameters (optional, e.g. region)": "Other parameters (optional, e.g. region)",
+    "Donated keys join this channel’s shared key pool.": "Donated keys join this channel’s shared key pool."
   }
 }

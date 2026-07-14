@@ -111,7 +111,7 @@ export function useSidebarData(): SidebarData {
             icon: Wallet,
           },
           {
-            title: t('My Contribution Channels'),
+            title: t('Shared Channel Pool'),
             url: '/member-channels',
             icon: Share2,
           },
