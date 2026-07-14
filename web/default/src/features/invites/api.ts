@@ -35,9 +35,17 @@ export async function listInvites() {
   return res.data
 }
 
-export async function createInvite(mode: 'once' | 'perm', note: string) {
+export async function createInvite(
+  mode: 'once' | 'perm',
+  note: string,
+  maxUses?: number,
+  days?: number
+) {
+  const params = new URLSearchParams({ mode, note })
+  if (maxUses !== undefined) params.set('max', String(maxUses))
+  if (days !== undefined) params.set('days', String(days))
   const res = await api.post<InviteCreateResponse>(
-    `/invite/admin/api/new?mode=${mode}&note=${encodeURIComponent(note)}`,
+    `/invite/admin/api/new?${params.toString()}`,
     null,
     { headers: IG_HEADERS }
   )

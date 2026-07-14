@@ -73,6 +73,8 @@ export function Invites() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [note, setNote] = useState('')
+  const [maxUses, setMaxUses] = useState('')
+  const [days, setDays] = useState('')
   const [newLink, setNewLink] = useState('')
   const [copied, setCopied] = useState(false)
   const [revokeTarget, setRevokeTarget] = useState<InviteItem | null>(null)
@@ -83,7 +85,11 @@ export function Invites() {
   })
 
   const createMutation = useMutation({
-    mutationFn: (mode: 'once' | 'perm') => createInvite(mode, note.trim()),
+    mutationFn: (mode: 'once' | 'perm') => {
+      const max = maxUses.trim() === '' ? undefined : Number(maxUses)
+      const validDays = days.trim() === '' ? undefined : Number(days)
+      return createInvite(mode, note.trim(), max, validDays)
+    },
     onSuccess: (res) => {
       if (!res.success || !res.link) {
         toast.error(res.message || t('Failed to create invite'))
@@ -92,6 +98,8 @@ export function Invites() {
       setNewLink(res.link)
       setCopied(false)
       setNote('')
+      setMaxUses('')
+      setDays('')
       toast.success(t('Invite link created'))
       queryClient.invalidateQueries({ queryKey: ['invites'] })
     },
@@ -143,6 +151,22 @@ export function Invites() {
                   onChange={(e) => setNote(e.target.value)}
                   className='sm:max-w-xs'
                 />
+                <Input
+                  value={maxUses}
+                  type='number'
+                  min={0}
+                  placeholder={t('Usage limit (optional)')}
+                  onChange={(e) => setMaxUses(e.target.value)}
+                  className='sm:w-36'
+                />
+                <Input
+                  value={days}
+                  type='number'
+                  min={0}
+                  placeholder={t('Valid days (optional)')}
+                  onChange={(e) => setDays(e.target.value)}
+                  className='sm:w-36'
+                />
                 <Button
                   disabled={createMutation.isPending}
                   onClick={() => createMutation.mutate('once')}
@@ -162,7 +186,7 @@ export function Invites() {
               </div>
               <p className='text-muted-foreground text-xs'>
                 {t(
-                  'One-time links burn after use; permanent links can be revoked anytime.'
+                  'Blank fields use defaults: one-time = 1 use / 7 days; permanent = unlimited / never expires. Parameters are fixed at creation; revoke and regenerate to change them.'
                 )}
               </p>
               {newLink ? (
