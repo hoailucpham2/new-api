@@ -26,6 +26,8 @@ export type HeaderNavModulesConfig = {
   console: boolean
   pricing: HeaderNavAccessConfig
   rankings: HeaderNavAccessConfig
+  contributions: HeaderNavAccessConfig
+  member_channels: HeaderNavAccessConfig
   docs: boolean
   about: boolean
   [key: string]: boolean | HeaderNavAccessConfig
@@ -48,6 +50,14 @@ export const HEADER_NAV_DEFAULT: HeaderNavModulesConfig = {
   rankings: {
     enabled: true,
     requireAuth: false,
+  },
+  contributions: {
+    enabled: true,
+    requireAuth: false,
+  },
+  member_channels: {
+    enabled: true,
+    requireAuth: true,
   },
   docs: true,
   about: true,
@@ -98,6 +108,8 @@ const cloneHeaderNavDefault = (): HeaderNavModulesConfig => ({
   ...HEADER_NAV_DEFAULT,
   pricing: { ...HEADER_NAV_DEFAULT.pricing },
   rankings: { ...HEADER_NAV_DEFAULT.rankings },
+  contributions: { ...HEADER_NAV_DEFAULT.contributions },
+  member_channels: { ...HEADER_NAV_DEFAULT.member_channels },
 })
 
 const parseAccessModule = (
@@ -146,6 +158,8 @@ export function parseHeaderNavModules(
       ...base,
       pricing: { ...base.pricing },
       rankings: { ...base.rankings },
+      contributions: { ...base.contributions },
+      member_channels: { ...base.member_channels },
     }
 
     Object.entries(parsed).forEach(([key, raw]) => {
@@ -155,6 +169,14 @@ export function parseHeaderNavModules(
       }
       if (key === 'rankings') {
         result.rankings = parseAccessModule(raw, base.rankings)
+        return
+      }
+      if (key === 'contributions') {
+        result.contributions = parseAccessModule(raw, base.contributions)
+        return
+      }
+      if (key === 'member_channels') {
+        result.member_channels = parseAccessModule(raw, base.member_channels)
         return
       }
 

@@ -231,7 +231,7 @@ func SetApiRouter(router *gin.Engine) {
 		registerChannelRoutes(apiRouter)
 		registerAuthzRoutes(apiRouter)
 		memberRoute := apiRouter.Group("/member")
-		memberRoute.Use(middleware.UserAuth())
+		memberRoute.Use(middleware.HeaderNavModuleAuth("member_channels"), middleware.UserAuth())
 		{
 			memberRoute.POST("/channel", controller.CreateSelfChannel)
 			memberRoute.GET("/channel", controller.ListSelfChannels)

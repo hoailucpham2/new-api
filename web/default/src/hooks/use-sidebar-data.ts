@@ -39,6 +39,7 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import { type SidebarData } from '@/components/layout/types'
+import { getModuleAccess } from '@/lib/nav-modules'
 import { ROLE } from '@/lib/roles'
 
 /**
@@ -110,11 +111,15 @@ export function useSidebarData(): SidebarData {
             url: '/wallet',
             icon: Wallet,
           },
-          {
-            title: t('Shared Channel Pool'),
-            url: '/member-channels',
-            icon: Share2,
-          },
+          ...(getModuleAccess('member_channels').enabled
+            ? [
+                {
+                  title: t('Shared Channel Pool'),
+                  url: '/member-channels',
+                  icon: Share2,
+                },
+              ]
+            : []),
           {
             title: t('Profile'),
             url: '/profile',

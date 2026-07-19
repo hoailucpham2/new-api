@@ -5228,6 +5228,10 @@
     "Channel name (also the model prefix)": "渠道名（同时作为模型前缀）",
     "Keys, one per line": "Key，一行一个",
     "Other parameters (optional, e.g. region)": "其他参数（可选，如区域）",
-    "Donated keys join this channel’s shared key pool.": "捐出的 key 将进入该渠道的共享 key 池。"
+    "Donated keys join this channel’s shared key pool.": "捐出的 key 将进入该渠道的共享 key 池。",
+    "Member co-managed channel pool and key donation (page and API).": "成员共管的共享渠道池与捐 key（页面与 API 一并开关）。",
+    "Public contribution leaderboard page.": "公开的贡献榜页面。",
+    "Require login to view contributions": "查看贡献榜需登录",
+    "Visitors must authenticate before accessing the contributions page.": "访客需登录后才能访问贡献榜页面。"
   }
 }

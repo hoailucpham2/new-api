@@ -20,7 +20,11 @@ import { getStatus } from '@/lib/api'
 
 export type ModuleAccess = { enabled: boolean; requireAuth: boolean }
 
-export type HeaderNavModule = 'rankings' | 'pricing' | 'contributions'
+export type HeaderNavModule =
+  | 'rankings'
+  | 'pricing'
+  | 'contributions'
+  | 'member_channels'
 
 export type HeaderNavModules = {
   home: boolean
@@ -28,6 +32,7 @@ export type HeaderNavModules = {
   pricing: ModuleAccess
   rankings: ModuleAccess
   contributions: ModuleAccess
+  member_channels: ModuleAccess
   docs: boolean
   about: boolean
   [key: string]: boolean | ModuleAccess
@@ -39,6 +44,7 @@ const DEFAULT_HEADER_NAV_MODULES: HeaderNavModules = {
   pricing: { enabled: true, requireAuth: false },
   rankings: { enabled: true, requireAuth: false },
   contributions: { enabled: true, requireAuth: false },
+  member_channels: { enabled: true, requireAuth: true },
   docs: true,
   about: true,
 }
@@ -47,6 +53,7 @@ const DEFAULTS: Record<HeaderNavModule, ModuleAccess> = {
   pricing: DEFAULT_HEADER_NAV_MODULES.pricing,
   rankings: DEFAULT_HEADER_NAV_MODULES.rankings,
   contributions: DEFAULT_HEADER_NAV_MODULES.contributions,
+  member_channels: DEFAULT_HEADER_NAV_MODULES.member_channels,
 }
 
 function cloneHeaderNavDefaults(): HeaderNavModules {
@@ -55,6 +62,7 @@ function cloneHeaderNavDefaults(): HeaderNavModules {
     pricing: { ...DEFAULT_HEADER_NAV_MODULES.pricing },
     rankings: { ...DEFAULT_HEADER_NAV_MODULES.rankings },
     contributions: { ...DEFAULT_HEADER_NAV_MODULES.contributions },
+    member_channels: { ...DEFAULT_HEADER_NAV_MODULES.member_channels },
   }
 }
 
@@ -124,6 +132,10 @@ export function parseHeaderNavModules(raw: unknown): HeaderNavModules {
     }
     if (key === 'contributions') {
       result.contributions = parseAccess(value, result.contributions)
+      return
+    }
+    if (key === 'member_channels') {
+      result.member_channels = parseAccess(value, result.member_channels)
       return
     }
 

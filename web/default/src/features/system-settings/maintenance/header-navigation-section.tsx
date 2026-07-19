@@ -55,6 +55,9 @@ const headerNavSchema = z.object({
   pricingRequireAuth: z.boolean(),
   rankingsEnabled: z.boolean(),
   rankingsRequireAuth: z.boolean(),
+  contributionsEnabled: z.boolean(),
+  contributionsRequireAuth: z.boolean(),
+  memberChannelsEnabled: z.boolean(),
   docs: z.boolean(),
   about: z.boolean(),
 })
@@ -89,6 +92,18 @@ const toFormValues = (config: HeaderNavModulesConfig): HeaderNavFormValues => ({
     config.rankings?.requireAuth === undefined
       ? HEADER_NAV_DEFAULT.rankings.requireAuth
       : Boolean(config.rankings.requireAuth),
+  contributionsEnabled:
+    config.contributions?.enabled === undefined
+      ? HEADER_NAV_DEFAULT.contributions.enabled
+      : Boolean(config.contributions.enabled),
+  contributionsRequireAuth:
+    config.contributions?.requireAuth === undefined
+      ? HEADER_NAV_DEFAULT.contributions.requireAuth
+      : Boolean(config.contributions.requireAuth),
+  memberChannelsEnabled:
+    config.member_channels?.enabled === undefined
+      ? HEADER_NAV_DEFAULT.member_channels.enabled
+      : Boolean(config.member_channels.enabled),
   docs:
     config.docs === undefined ? HEADER_NAV_DEFAULT.docs : Boolean(config.docs),
   about:
@@ -130,6 +145,15 @@ export function HeaderNavigationSection({
         ...(config.rankings ?? HEADER_NAV_DEFAULT.rankings),
         enabled: values.rankingsEnabled,
         requireAuth: values.rankingsRequireAuth,
+      },
+      contributions: {
+        ...(config.contributions ?? HEADER_NAV_DEFAULT.contributions),
+        enabled: values.contributionsEnabled,
+        requireAuth: values.contributionsRequireAuth,
+      },
+      member_channels: {
+        ...(config.member_channels ?? HEADER_NAV_DEFAULT.member_channels),
+        enabled: values.memberChannelsEnabled,
       },
     }
 
@@ -173,12 +197,22 @@ export function HeaderNavigationSection({
       title: t('About'),
       description: t('Static page describing the platform.'),
     },
+    {
+      key: 'memberChannelsEnabled',
+      title: t('Shared Channel Pool'),
+      description: t(
+        'Member co-managed channel pool and key donation (page and API).'
+      ),
+    },
   ]
 
   const accessModules: Array<{
     enabledKey: keyof HeaderNavFormValues
     requireAuthKey: keyof HeaderNavFormValues
-    requireAuthDependsOn: 'pricingEnabled' | 'rankingsEnabled'
+    requireAuthDependsOn:
+      | 'pricingEnabled'
+      | 'rankingsEnabled'
+      | 'contributionsEnabled'
     title: string
     description: string
     requireAuthTitle: string
@@ -204,6 +238,17 @@ export function HeaderNavigationSection({
       requireAuthTitle: t('Require login to view rankings'),
       requireAuthDescription: t(
         'Visitors must authenticate before accessing the rankings page.'
+      ),
+    },
+    {
+      enabledKey: 'contributionsEnabled',
+      requireAuthKey: 'contributionsRequireAuth',
+      requireAuthDependsOn: 'contributionsEnabled',
+      title: t('Contribution Leaderboard'),
+      description: t('Public contribution leaderboard page.'),
+      requireAuthTitle: t('Require login to view contributions'),
+      requireAuthDescription: t(
+        'Visitors must authenticate before accessing the contributions page.'
       ),
     },
   ]

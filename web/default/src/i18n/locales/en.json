@@ -5205,6 +5205,10 @@
     "Channel name (also the model prefix)": "Channel name (also the model prefix)",
     "Keys, one per line": "Keys, one per line",
     "Other parameters (optional, e.g. region)": "Other parameters (optional, e.g. region)",
-    "Donated keys join this channel’s shared key pool.": "Donated keys join this channel’s shared key pool."
+    "Donated keys join this channel’s shared key pool.": "Donated keys join this channel’s shared key pool.",
+    "Member co-managed channel pool and key donation (page and API).": "Member co-managed channel pool and key donation (page and API).",
+    "Public contribution leaderboard page.": "Public contribution leaderboard page.",
+    "Require login to view contributions": "Require login to view contributions",
+    "Visitors must authenticate before accessing the contributions page.": "Visitors must authenticate before accessing the contributions page."
   }
 }

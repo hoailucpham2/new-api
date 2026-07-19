@@ -16,10 +16,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 import { MemberChannels } from '@/features/member-channels'
+import { getFreshModuleAccess } from '@/lib/nav-modules'
 
 export const Route = createFileRoute('/_authenticated/member-channels/')({
+  beforeLoad: async () => {
+    const access = await getFreshModuleAccess('member_channels')
+    if (!access.enabled) {
+      throw redirect({ to: '/' })
+    }
+  },
   component: MemberChannels,
 })
